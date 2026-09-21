@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: book_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: book_manager
+      MYSQL_ROOT_PASSWORD: secretpassword
+    ports:
+      - "3307:3306"  
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build: ./api
+    container_name: book_laravel
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./api:/var/www
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  frontend:
+    build: ./frontend
+    container_name: book_react
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  mysql_data:
